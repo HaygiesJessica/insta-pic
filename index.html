@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Insta-Pic Photobooth</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="photobooth-machine">
+        <div class="machine-top">
+            <div class="camera-lens"><div class="lens-inner"></div></div>
+            <div class="flash"></div>
+            <div class="brand-name"> INSTA-PIC</div>
+        </div>
+
+        <div class="machine-bezel">
+            <div class="machine-screen" id="screen-container">
+                
+                <div id="screen-welcome" class="ui-screen active">
+                    <h1>WELCOME!</h1>
+                    <p>Ready to take cute photos?</p>
+                    <div class="idle-decoration">📸</div>
+                    <button class="nav-btn" id="btn-welcome-next">Next</button>
+                </div>
+
+                <div id="screen-frames" class="ui-screen">
+                    <h2>Choose Frame</h2>
+                    <div class="frame-options">
+                        <div class="frame-card" data-layout="strip2x6">
+                            <div class="frame-preview strip2x6"></div><p>2x6 Strip</p>
+                        </div>
+                        <div class="frame-card" data-layout="landscape4x6">
+                            <div class="frame-preview landscape4x6"></div><p>4x6 Wide</p>
+                        </div>
+                        <div class="frame-card" data-layout="single5x7">
+                            <div class="frame-preview single5x7"></div><p>5x7 Single</p>
+                        </div>
+                    </div>
+                    <button class="nav-btn secondary" id="btn-frame-back">Back</button>
+                </div>
+
+                <div id="screen-camera" class="ui-screen">
+                    <div class="camera-view">
+                        <video id="video" autoplay playsinline></video>
+                        <div id="countdown" class="countdown hidden"></div>
+                        <div id="flash" class="flash-effect"></div>
+                    </div>
+                    <p id="camera-status">Get Ready!</p>
+                    <button class="action-btn" id="btn-take-photo">Take Photo</button>
+                    <button class="nav-btn secondary" id="btn-camera-back">Back</button>
+                </div>
+
+                <div id="screen-edit" class="ui-screen">
+                    <div class="edit-area">
+                        <div class="canvas-wrapper">
+                            <canvas id="canvas"></canvas>
+                            <div id="sticker-container"></div>
+                        </div>
+                        <div class="edit-tools">
+                            <div class="tool-group">
+                                <h4>Frame Color</h4>
+                                <div class="color-palette">
+                                    <button class="color-btn active" data-color="#ffffff" style="background:#fff"></button>
+                                    <button class="color-btn" data-color="#b5ead7" style="background:#b5ead7"></button>
+                                    <button class="color-btn" data-color="#ffdfba" style="background:#ffdfba"></button>
+                                    <button class="color-btn" data-color="#ffb7b2" style="background:#ffb7b2"></button>
+                                    <!-- NEW: Blue and Purple Colors -->
+                                    <button class="color-btn" data-color="#a2d2ff" style="background:#a2d2ff"></button>
+                                    <button class="color-btn" data-color="#cdb4db" style="background:#cdb4db"></button>
+                                    <button class="color-btn" data-color="#333333" style="background:#333"></button>
+                                </div>
+                            </div>
+                            <div class="tool-group">
+                                <h4>Filter</h4>
+                                <div class="filter-palette">
+                                    <button class="filter-btn active" data-filter="none">Normal</button>
+                                    <button class="filter-btn" data-filter="grayscale(100%)">B&W</button>
+                                    <button class="filter-btn" data-filter="sepia(100%)">Sepia</button>
+                                    <button class="filter-btn" data-filter="contrast(1.2) saturate(1.3)">Vivid</button>
+                                </div>
+                            </div>
+                            <div class="tool-group">
+                                <h4>Stickers</h4>
+                                <div class="sticker-palette">
+                                    <span class="sticker-btn" data-sticker="❤️">❤️</span>
+                                    <span class="sticker-btn" data-sticker="⭐">⭐</span>
+                                    <span class="sticker-btn" data-sticker="✨">✨</span>
+                                    <span class="sticker-btn" data-sticker="">🌸</span>
+                                    <span class="sticker-btn" data-sticker="">🔥</span>
+                                    <span class="sticker-btn" data-sticker="">👑</span>
+                                </div>
+                            </div>
+                            <div class="tool-group">
+                                <h4>Add Text</h4>
+                                <input type="text" id="text-input" placeholder="Type here..." class="text-input">
+                                <div class="text-color-palette">
+                                    <button class="color-btn active" data-text-color="#000000" style="background:#000"></button>
+                                    <button class="color-btn" data-text-color="#ffffff" style="background:#fff; border: 1px solid #ccc;"></button>
+                                </div>
+                                <div class="text-font-palette">
+                                    <button class="filter-btn active" data-text-font="Georgia, serif">Serif</button>
+                                    <button class="filter-btn" data-text-font="Arial, sans-serif">Sans</button>
+                                    <button class="filter-btn" data-text-font="'Brush Script MT', cursive">Cursive</button>
+                                </div>
+                                <button class="action-btn small-btn" id="btn-add-text">Add Text</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="edit-actions">
+                        <button class="nav-btn secondary" id="btn-edit-back">Back</button>
+                        <button class="nav-btn secondary" id="btn-retake">Retake</button>
+                        <button class="action-btn" id="btn-download">Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="machine-bottom">
+            <div class="photo-slot"></div>
+        </div>
+        <div id="photo-drop-zone"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
