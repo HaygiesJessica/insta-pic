@@ -19,7 +19,7 @@ Insta-Pic is a web-based virtual photobooth application designed to look and fee
 - **HTML5:** Used for the structure and the Canvas API, which handles the high-resolution image rendering.
 - **CSS3:** Used for styling, animations, and creating the realistic 3D physical machine look.
 - **JavaScript (ES6+):** Handles the core logic, webcam integration, and interactive features. The code is organized using Object-Oriented Programming (Classes) to keep it clean, modular, and easy to maintain.
-- **Google Fonts:** Uses Fredoka and Quicksand fonts for clean, modern typography.
+- **Google Fonts:** Uses Courier New and Quicksand fonts for clean, modern typography.
 
 ## Deployment
 
