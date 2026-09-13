@@ -4,6 +4,9 @@ const LAYOUT_CONFIG = {
     single5x7: { width: 1500, height: 2100, shots: 1 }
 };
 
+const DOM_STICKER_SIZE = 30; 
+const DOM_TEXT_SIZE = 24;
+
 class CameraManager {
     constructor(videoElement) { this.video = videoElement; this.stream = null; }
     async start() {
@@ -46,90 +49,232 @@ class CanvasRenderer {
         ctx.restore();
     }
     drawStickers(stickersData) {
-        const ctx = this.ctx; const baseSize = Math.min(this.canvas.width, this.canvas.height) * 0.08;
+        const ctx = this.ctx;
+        const ratio = this.canvas.width / this.canvas.getBoundingClientRect().width;
         stickersData.forEach(s => {
-            ctx.save(); const x = s.xPercent * this.canvas.width; const y = s.yPercent * this.canvas.height; const size = baseSize * s.scale;
-            ctx.translate(x, y); ctx.rotate(s.rotation * Math.PI / 180); ctx.font = `${size}px Arial`; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(s.emoji, 0, 0); ctx.restore();
+            ctx.save();
+            const x = s.xPercent * this.canvas.width;
+            const y = s.yPercent * this.canvas.height;
+            const size = DOM_STICKER_SIZE * ratio * s.scale;
+            ctx.translate(x, y);
+            ctx.rotate(s.rotation * Math.PI / 180);
+            ctx.font = `${size}px Arial`;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.fillText(s.emoji, 0, 0);
+            ctx.restore();
         });
     }
-    // NEW: Draw Texts on Canvas
     drawTexts(textsData) {
-        const ctx = this.ctx; const baseSize = Math.min(this.canvas.width, this.canvas.height) * 0.05;
+        const ctx = this.ctx;
+        const ratio = this.canvas.width / this.canvas.getBoundingClientRect().width;
         textsData.forEach(t => {
             ctx.save();
-            const x = t.xPercent * this.canvas.width; const y = t.yPercent * this.canvas.height; const size = baseSize * t.scale;
-            ctx.translate(x, y); ctx.rotate(t.rotation * Math.PI / 180);
-            ctx.font = `${size}px ${t.fontFamily}`; ctx.fillStyle = t.color; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
-            ctx.fillText(t.text, 0, 0); ctx.restore();
+            const x = t.xPercent * this.canvas.width;
+            const y = t.yPercent * this.canvas.height;
+            const size = DOM_TEXT_SIZE * ratio * t.scale;
+            ctx.translate(x, y);
+            ctx.rotate(t.rotation * Math.PI / 180);
+            ctx.font = `${size}px ${t.fontFamily}`;
+            ctx.fillStyle = t.color;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.fillText(t.text, 0, 0);
+            ctx.restore();
         });
     }
     toDataURL() { return this.canvas.toDataURL('image/png'); }
 }
 
-class StickerManager {
-    constructor(container) { this.container = container; this.stickers = []; }
-    add(emoji) {
-        const el = document.createElement('div'); el.className = 'placed-sticker';
-        el.innerHTML = `<span class="sticker-content">${emoji}</span><div class="handle delete-handle">×</div><div class="handle rotate-handle">↻</div><div class="handle resize-handle">⤡</div>`;
-        const data = { element: el, emoji, xPercent: 0.5, yPercent: 0.4, rotation: 0, scale: 1 }; this.stickers.push(data);
-        el.style.left = '50%'; el.style.top = '40%'; el.style.transform = 'translate(-50%, -50%)';
-        el.querySelector('.delete-handle').onclick = (e) => { e.stopPropagation(); this.delete(el); };
-        this.makeDraggable(el, data); this.makeRotatable(el, data); this.makeResizable(el, data); this.container.appendChild(el);
+class InteractiveElementManager {
+    constructor(container, type, canvasElement) {
+        this.container = container;
+        this.type = type;
+        this.canvasElement = canvasElement;
+        this.items = [];
+        this.highestZ = 10;
     }
-    delete(el) { this.stickers = this.stickers.filter(s => s.element !== el); el.remove(); }
-    clear() { this.stickers.forEach(s => s.element.remove()); this.stickers = []; }
-    getData() { return this.stickers; }
-    makeDraggable(el, data) {
-        let ix = 0, iy = 0; el.onpointerdown = (e) => { if (e.target.classList.contains('handle')) return; e.preventDefault(); ix = e.clientX; iy = e.clientY;
-            document.onpointermove = (ev) => { ev.preventDefault(); const rect = this.container.getBoundingClientRect(); el.style.left = `${parseFloat(el.style.left) + ((ev.clientX - ix) / rect.width) * 100}%`; el.style.top = `${parseFloat(el.style.top) + ((ev.clientY - iy) / rect.height) * 100}%`; ix = ev.clientX; iy = ev.clientY; };
-            document.onpointerup = () => { document.onpointermove = null; document.onpointerup = null; data.xPercent = parseFloat(el.style.left) / 100; data.yPercent = parseFloat(el.style.top) / 100; }; };
-    }
-    makeRotatable(el, data) {
-        const handle = el.querySelector('.rotate-handle'); handle.onpointerdown = (e) => { e.preventDefault(); e.stopPropagation(); const rect = el.getBoundingClientRect(); const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2; const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI; const startRot = data.rotation;
-            document.onpointermove = (ev) => { ev.preventDefault(); data.rotation = startRot + (Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI - startAngle); el.style.transform = `translate(-50%, -50%) rotate(${data.rotation}deg) scale(${data.scale})`; };
-            document.onpointerup = () => { document.onpointermove = null; document.onpointerup = null; }; };
-    }
-    makeResizable(el, data) {
-        const handle = el.querySelector('.resize-handle'); handle.onpointerdown = (e) => { e.preventDefault(); e.stopPropagation(); const rect = el.getBoundingClientRect(); const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2; const startDist = Math.hypot(e.clientX - cx, e.clientY - cy); const startScale = data.scale;
-            document.onpointermove = (ev) => { ev.preventDefault(); data.scale = Math.max(0.2, Math.min(3, startScale * (Math.hypot(ev.clientX - cx, ev.clientY - cy) / startDist))); el.style.transform = `translate(-50%, -50%) rotate(${data.rotation}deg) scale(${data.scale})`; };
-            document.onpointerup = () => { document.onpointermove = null; document.onpointerup = null; }; };
-    }
-}
 
-// NEW: TextManager Class
-class TextManager {
-    constructor(container) { this.container = container; this.texts = []; }
-    add(text, color, fontFamily) {
-        if (!text.trim()) return;
-        const el = document.createElement('div'); el.className = 'placed-text'; el.textContent = text;
-        el.style.color = color; el.style.fontFamily = fontFamily;
-        const data = { element: el, text, color, fontFamily, xPercent: 0.5, yPercent: 0.5, rotation: 0, scale: 1 }; this.texts.push(data);
-        el.style.left = '50%'; el.style.top = '50%'; el.style.transform = 'translate(-50%, -50%)';
-        const delBtn = document.createElement('div'); delBtn.className = 'handle delete-handle'; delBtn.textContent = '×';
-        const rotBtn = document.createElement('div'); rotBtn.className = 'handle rotate-handle'; rotBtn.textContent = '↻';
-        const resBtn = document.createElement('div'); resBtn.className = 'handle resize-handle'; resBtn.textContent = '';
-        delBtn.onclick = (e) => { e.stopPropagation(); this.delete(el); };
-        el.appendChild(delBtn); el.appendChild(rotBtn); el.appendChild(resBtn);
+    add(content, options = {}) {
+        const el = document.createElement('div');
+        el.className = `placed-${this.type}`;
+        
+        if (this.type === 'sticker') {
+            el.innerHTML = `<span class="sticker-content">${content}</span>`;
+        } else {
+            el.textContent = content.text;
+            el.style.color = content.color;
+            el.style.fontFamily = content.fontFamily;
+        }
+
+        const data = { 
+            element: el, 
+            xPercent: 0.5, yPercent: 0.5, 
+            rotation: 0, scale: 1,
+            ...options
+        };
+        if (this.type === 'sticker') data.emoji = content;
+        else { data.text = content.text; data.color = content.color; data.fontFamily = content.fontFamily; }
+
+        this.items.push(data);
+        
+        const delBtn = this.createHandle('delete-handle', '×');
+        const rotBtn = this.createHandle('rotate-handle', '↻');
+        const resBtn = this.createHandle('resize-handle', '⤡');
+
+        delBtn.onclick = (e) => { e.stopPropagation(); this.deleteItem(el); };
+        
+        el.appendChild(delBtn);
+        el.appendChild(rotBtn);
+        el.appendChild(resBtn);
         this.container.appendChild(el);
-        this.makeDraggable(el, data); this.makeRotatable(el, data); this.makeResizable(el, data);
+
+        this.updateDOMPosition(el, data);
+        this.attachEvents(el, data, rotBtn, resBtn);
     }
-    delete(el) { this.texts = this.texts.filter(s => s.element !== el); el.remove(); }
-    clear() { this.texts.forEach(s => s.element.remove()); this.texts = []; }
-    getData() { return this.texts; }
-    makeDraggable(el, data) {
-        let ix = 0, iy = 0; el.onpointerdown = (e) => { if (e.target.classList.contains('handle')) return; e.preventDefault(); ix = e.clientX; iy = e.clientY;
-            document.onpointermove = (ev) => { ev.preventDefault(); const rect = this.container.getBoundingClientRect(); el.style.left = `${parseFloat(el.style.left) + ((ev.clientX - ix) / rect.width) * 100}%`; el.style.top = `${parseFloat(el.style.top) + ((ev.clientY - iy) / rect.height) * 100}%`; ix = ev.clientX; iy = ev.clientY; };
-            document.onpointerup = () => { document.onpointermove = null; document.onpointerup = null; data.xPercent = parseFloat(el.style.left) / 100; data.yPercent = parseFloat(el.style.top) / 100; }; };
+
+    createHandle(className, text) {
+        const btn = document.createElement('div');
+        btn.className = `handle ${className}`;
+        btn.textContent = text;
+        return btn;
     }
-    makeRotatable(el, data) {
-        const handle = el.querySelector('.rotate-handle'); handle.onpointerdown = (e) => { e.preventDefault(); e.stopPropagation(); const rect = el.getBoundingClientRect(); const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2; const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI; const startRot = data.rotation;
-            document.onpointermove = (ev) => { ev.preventDefault(); data.rotation = startRot + (Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI - startAngle); el.style.transform = `translate(-50%, -50%) rotate(${data.rotation}deg) scale(${data.scale})`; };
-            document.onpointerup = () => { document.onpointermove = null; document.onpointerup = null; }; };
+
+    deleteItem(el) {
+        this.items = this.items.filter(i => i.element !== el);
+        el.remove();
     }
-    makeResizable(el, data) {
-        const handle = el.querySelector('.resize-handle'); handle.onpointerdown = (e) => { e.preventDefault(); e.stopPropagation(); const rect = el.getBoundingClientRect(); const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2; const startDist = Math.hypot(e.clientX - cx, e.clientY - cy); const startScale = data.scale;
-            document.onpointermove = (ev) => { ev.preventDefault(); data.scale = Math.max(0.2, Math.min(3, startScale * (Math.hypot(ev.clientX - cx, ev.clientY - cy) / startDist))); el.style.transform = `translate(-50%, -50%) rotate(${data.rotation}deg) scale(${data.scale})`; };
-            document.onpointerup = () => { document.onpointermove = null; document.onpointerup = null; }; };
+
+    clear() {
+        this.items.forEach(i => i.element.remove());
+        this.items = [];
+    }
+
+    getData() { return this.items; }
+
+    bringToFront(el) {
+        this.highestZ++;
+        el.style.zIndex = this.highestZ;
+    }
+
+    updateDOMPosition(el, data) {
+        const canvasRect = this.canvasElement.getBoundingClientRect();
+        const containerRect = this.container.getBoundingClientRect();
+        
+        const xInCanvas = data.xPercent * canvasRect.width;
+        const yInCanvas = data.yPercent * canvasRect.height;
+        
+        const xInContainer = xInCanvas + (canvasRect.left - containerRect.left);
+        const yInContainer = yInCanvas + (canvasRect.top - containerRect.top);
+        
+        el.style.left = `${xInContainer}px`;
+        el.style.top = `${yInContainer}px`;
+        el.style.transform = `translate(-50%, -50%) rotate(${data.rotation}deg) scale(${data.scale})`;
+    }
+
+    attachEvents(el, data, rotBtn, resBtn) {
+        el.onpointerdown = (e) => {
+            if (e.target.classList.contains('handle')) return;
+            this.bringToFront(el);
+            this.startDrag(e, el, data);
+        };
+
+        rotBtn.onpointerdown = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            this.bringToFront(el);
+            this.startRotate(e, el, data);
+        };
+
+        resBtn.onpointerdown = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            this.bringToFront(el);
+            this.startResize(e, el, data);
+        };
+    }
+
+    startDrag(e, el, data) {
+        e.preventDefault();
+        const canvasRect = this.canvasElement.getBoundingClientRect();
+        const startX = e.clientX;
+        const startY = e.clientY;
+        
+        const startCenterX = data.xPercent * canvasRect.width;
+        const startCenterY = data.yPercent * canvasRect.height;
+
+        const onMove = (ev) => {
+            ev.preventDefault();
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            
+            const newCenterX = startCenterX + dx;
+            const newCenterY = startCenterY + dy;
+            
+            data.xPercent = newCenterX / canvasRect.width;
+            data.yPercent = newCenterY / canvasRect.height;
+            
+            this.updateDOMPosition(el, data);
+        };
+
+        const onUp = () => {
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+        };
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+    }
+
+    startRotate(e, el, data) {
+        e.preventDefault();
+        const canvasRect = this.canvasElement.getBoundingClientRect();
+        const cx = canvasRect.left + (data.xPercent * canvasRect.width);
+        const cy = canvasRect.top + (data.yPercent * canvasRect.height);
+        
+        const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx);
+        const startRotation = data.rotation;
+
+        const onMove = (ev) => {
+            ev.preventDefault();
+            const currentAngle = Math.atan2(ev.clientY - cy, ev.clientX - cx);
+            const deltaAngle = currentAngle - startAngle;
+            data.rotation = startRotation + (deltaAngle * 180 / Math.PI);
+            this.updateDOMPosition(el, data);
+        };
+
+        const onUp = () => {
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+        };
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+    }
+
+    startResize(e, el, data) {
+        e.preventDefault();
+        const canvasRect = this.canvasElement.getBoundingClientRect();
+        const cx = canvasRect.left + (data.xPercent * canvasRect.width);
+        const cy = canvasRect.top + (data.yPercent * canvasRect.height);
+        
+        const startDist = Math.hypot(e.clientX - cx, e.clientY - cy);
+        const startScale = data.scale;
+
+        const onMove = (ev) => {
+            ev.preventDefault();
+            const currentDist = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+            let newScale = startScale * (currentDist / startDist);
+            newScale = Math.max(0.3, Math.min(4, newScale));
+            data.scale = newScale;
+            this.updateDOMPosition(el, data);
+        };
+
+        const onUp = () => {
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+        };
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
     }
 }
 
@@ -138,9 +283,12 @@ class PhotoBoothApp {
         this.layoutKey = 'single5x7'; this.images = []; this.shots = 0; this.isProcessing = false;
         this.screens = { welcome: document.getElementById('screen-welcome'), frames: document.getElementById('screen-frames'), camera: document.getElementById('screen-camera'), edit: document.getElementById('screen-edit') };
         this.camera = new CameraManager(document.getElementById('video'));
-        this.renderer = new CanvasRenderer(document.getElementById('canvas'));
-        this.stickerMgr = new StickerManager(document.getElementById('sticker-container'));
-        this.textMgr = new TextManager(document.getElementById('sticker-container')); // Share container
+        this.canvasElement = document.getElementById('canvas');
+        this.renderer = new CanvasRenderer(this.canvasElement);
+        
+        this.stickerMgr = new InteractiveElementManager(document.getElementById('sticker-container'), 'sticker', this.canvasElement);
+        this.textMgr = new InteractiveElementManager(document.getElementById('sticker-container'), 'text', this.canvasElement);
+        
         this.currentTextColor = '#000000'; this.currentTextFont = 'Georgia, serif';
         this.init();
     }
@@ -159,13 +307,14 @@ class PhotoBoothApp {
         document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active')); btn.classList.add('active'); this.renderer.filter = btn.dataset.filter; this.renderer.drawBase(this.images); }); });
         document.querySelectorAll('.sticker-btn').forEach(btn => { btn.addEventListener('click', () => this.stickerMgr.add(btn.dataset.sticker)); });
 
-        // Text Controls
         document.querySelectorAll('.color-btn[data-text-color]').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.color-btn[data-text-color]').forEach(b => b.classList.remove('active')); btn.classList.add('active'); this.currentTextColor = btn.dataset.textColor; }); });
         document.querySelectorAll('.filter-btn[data-text-font]').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.filter-btn[data-text-font]').forEach(b => b.classList.remove('active')); btn.classList.add('active'); this.currentTextFont = btn.dataset.textFont; }); });
         document.getElementById('btn-add-text').addEventListener('click', () => {
             const input = document.getElementById('text-input');
-            this.textMgr.add(input.value, this.currentTextColor, this.currentTextFont);
-            input.value = '';
+            if (input.value.trim()) {
+                this.textMgr.add({ text: input.value, color: this.currentTextColor, fontFamily: this.currentTextFont });
+                input.value = '';
+            }
         });
     }
 
@@ -183,17 +332,47 @@ class PhotoBoothApp {
         this.images.push(this.camera.capture()); this.shots++; this.isProcessing = false; this.updateStatus();
     }
     handleRetake() { this.stickerMgr.clear(); this.textMgr.clear(); this.images = []; this.shots = 0; this.camera.start().then(() => { this.showScreen('camera'); this.updateStatus(); }); }
-    handleDownload() {
+    
+        handleDownload() {
         try {
             this.renderer.drawBase(this.images);
             this.renderer.drawStickers(this.stickerMgr.getData());
-            this.renderer.drawTexts(this.textMgr.getData()); // Draw texts
+            this.renderer.drawTexts(this.textMgr.getData());
+            
             const dataURL = this.renderer.toDataURL();
-            const link = document.createElement('a'); link.download = `mintsnap_${this.layoutKey}_${Date.now()}.png`; link.href = dataURL; document.body.appendChild(link); link.click(); document.body.removeChild(link);
-            this.renderer.drawBase(this.images); this.animatePhotoDrop(dataURL);
-            setTimeout(() => { this.stickerMgr.clear(); this.textMgr.clear(); this.images = []; this.shots = 0; this.showScreen('welcome'); }, 3000);
-        } catch (err) { alert('Download failed: ' + err.message); console.error(err); }
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0'); 
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+            
+            const fileName = `insta-pic_${this.layoutKey}_${dateStr}.png`;
+            
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = dataURL;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            this.renderer.drawBase(this.images); 
+            this.animatePhotoDrop(dataURL);
+            
+            setTimeout(() => { 
+                this.stickerMgr.clear(); 
+                this.textMgr.clear(); 
+                this.images = []; 
+                this.shots = 0; 
+                this.showScreen('welcome'); 
+            }, 3000);
+            
+        } catch (err) { 
+            alert('Download failed: ' + err.message); 
+            console.error(err); 
+        }
     }
+
     animatePhotoDrop(dataURL) {
         const dropZone = document.getElementById('photo-drop-zone'); const img = document.createElement('img'); img.src = dataURL; img.className = 'dropping-photo';
         const slot = document.querySelector('.photo-slot'); const slotRect = slot.getBoundingClientRect(); const machineRect = document.querySelector('.photobooth-machine').getBoundingClientRect();

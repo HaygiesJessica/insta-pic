@@ -1,84 +1,35 @@
-# 📸 Mint Snap Photobooth
+# Insta-Pic Web Photobooth
 
-**Mint Snap** is a fun, interactive, and aesthetic web-based virtual photobooth application. Designed to mimic a real physical photobooth machine, it allows users to capture photos, customize them with cute frames, filters, stickers, and text, and download their creations in standard high-resolution print sizes.
+Insta-Pic is a web-based virtual photobooth application designed to look and feel like a real physical photobooth machine. Users can take photos using their webcam, choose from classic photo layouts, customize their pictures with colors, filters, stickers, and text, and then download the quality image.
 
-## ✨ Features
+## Features
 
-### 🎥 Camera & Capture
-- **Real-time Webcam Integration:** Smooth video feed with a mirrored preview.
-- **Classic Photobooth Experience:** 3-2-1 countdown timer and realistic flash effects.
-- **Auto-Capture Sequence:** Automatically takes multiple shots based on the selected layout.
+- **Realistic Machine Interface:** The application features a cute, mint-green kiosk design complete with a working camera lens, flash, and a photo slot where finished images drop out.
+- **Classic Frame Layouts:** Users can choose between three standard print sizes: 2x6 inch (4-photo strip), 4x6 inch (2-photo wide), or 5x7 inch (single large photo).
+- **High-Resolution Output:** All downloads are rendered at 300 DPI, matching exact real-world print dimensions for professional quality.
+- **Customization Tools:** Users can change frame colors, apply photo filters (Normal, Black & White, Sepia, Vivid), and add custom text.
+- **Interactive Elements:** Stickers and text can be dragged, resized, rotated, and deleted directly on the canvas.
+- **Exact Preview:** What you see on the screen is exactly what you get in the downloaded image. Positions, sizes, and rotations are perfectly synchronized.
+- **Photo Drop Animation:** A fun animation plays where the finished photo drops out of the machine slot upon downloading.
+- **Custom File Naming:** Downloads are automatically named with the layout size and the current date (e.g., insta-pic_2x6_2026-09-14.png).
+- **Mobile and Tablet Friendly:** The design is fully responsive and works smoothly on smaller screens.
 
-### 🖼️ Standard Print Layouts (300 DPI)
-Choose from three classic, high-resolution photobooth formats:
-- **2x6 in (Photo Strip):** 4 vertical shots.
-- **4x6 in (Wide):** 2 vertical shots.
-- **5x7 in (Single):** 1 large portrait shot.
+## Technologies Used
 
-### 🎨 Customization & Editing
-- **Pastel Frame Colors:** Choose from White, Mint, Peach, Pink, **Pastel Blue**, **Pastel Purple**, and Black.
-- **Photo Filters:** Normal, Black & White, Sepia, and Vivid.
-- **Interactive Stickers:** Add cute emojis. Fully **draggable, resizable, and rotatable**.
-- **Custom Text:** Type your own captions. Choose between Black/White text and 3 font styles (Serif, Sans-Serif, Cursive). Text is also **draggable, resizable, and rotatable**.
+- **HTML5:** Used for the structure and the Canvas API, which handles the high-resolution image rendering.
+- **CSS3:** Used for styling, animations, and creating the realistic 3D physical machine look.
+- **JavaScript (ES6+):** Handles the core logic, webcam integration, and interactive features. The code is organized using Object-Oriented Programming (Classes) to keep it clean, modular, and easy to maintain.
+- **Google Fonts:** Uses Fredoka and Quicksand fonts for clean, modern typography.
 
-### 🖱️ Realistic UI/UX
-- **Physical Machine Design:** A cute, mint-green kiosk interface with a camera lens, flash, and a photo slot.
-- **Photo Drop Animation:** A fun animation where the final printed photo "drops" out of the machine slot upon downloading.
+## Deployment
 
----
+The application is currently deployed and can be accessed online at the following link:
+https://insta-pic-photobooth.vercel.app/
 
-## 🛠️ Tech Stack
+## How to Run Locally
 
-- **HTML5:** Semantic structure and Canvas API for image rendering.
-- **CSS3:** Custom animations, flexbox/grid layouts, and realistic 3D UI styling.
-- **JavaScript (ES6+):** Object-Oriented Programming (OOP) architecture using Classes (`CameraManager`, `CanvasRenderer`, `StickerManager`, `TextManager`, `PhotoBoothApp`).
-
----
-
-## 🚀 How to Run
-
-This project runs entirely on the client side. No backend or database is required.
-
-### Prerequisites
-- A modern web browser (Chrome, Firefox, Edge, Safari).
-- A webcam (built-in or external).
-- [Visual Studio Code](https://code.visualstudio.com/) (Recommended).
-
-### Installation & Setup
-1. Clone or download this repository to your local machine.
-2. Open the project folder in **VS Code**.
-3. Ensure you have the following three files in the root directory:
-   - `index.html`
-   - `style.css`
-   - `script.js`
-4. Install the **Live Server** extension in VS Code.
-5. Right-click on `index.html` and select **"Open with Live Server"**.
-6. Allow camera permissions when prompted by your browser.
-
----
-
-## 📖 How to Use
-
-1. **Start:** Click the "Next" button on the Welcome screen.
-2. **Choose Frame:** Select your desired layout (2x6, 4x6, or 5x7).
-3. **Capture:** Click "Take Photo". Pose for the 3-second countdown. Repeat until all shots for your layout are taken.
-4. **Edit:** 
-   - Change the **Frame Color** or apply a **Filter**.
-   - Click on **Stickers** or type in the **Text** box and click "Add Text" to add elements.
-   - **Drag** elements to move them.
-   - Use the **Yellow handle (↻)** to rotate.
-   - Use the **Green handle (⤡)** to resize.
-   - Use the **Red handle (×)** to delete.
-5. **Download:** Click the "Download" button. The image will save to your device, and a cute animation will play on the screen!
-
----
-
-## 📁 Project Structure
-
-```text
-mint-snap-photobooth/
-│
-├── index.html      # Main HTML structure and UI layout
-├── style.css       # Styling, animations, and physical machine design
-├── script.js       # Core logic, OOP classes, and canvas rendering
-── README.md       # Project documentation
+1. Download the project files to your computer.
+2. Open the project folder in Visual Studio Code.
+3. Install the "Live Server" extension if you have not already done so.
+4. Right-click on `index.html` and select "Open with Live Server".
+5. Note: You must use a local server or a secure HTTPS link (such as Vercel or GitHub Pages) for the webcam to work, as modern browsers block camera access on standard file paths.
