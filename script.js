@@ -1,8 +1,7 @@
 const LAYOUT_CONFIG = {
-    // Tamang dimensions: width x length (inches converted to pixels at 300 DPI)
-    strip2x6: { width: 600, height: 1800, shots: 4 },    // 2x6 inches
-    landscape4x6: { width: 1200, height: 1800, shots: 2 }, // 4x6 inches
-    single5x7: { width: 1500, height: 2100, shots: 1 }    // 5x7 inches
+    strip2x6: { width: 600, height: 1800, shots: 4 },    
+    landscape4x6: { width: 1200, height: 1800, shots: 2 }, 
+    single5x7: { width: 1500, height: 2100, shots: 1 }   
 };
 
 const DOM_STICKER_SIZE = 30; 
@@ -32,27 +31,23 @@ class CanvasRenderer {
         const config = this.layout;
         const slots = [];
         
-        // Minimal padding sa gilid para mag-fill ang photos
-        const paddingX = config.width * 0.01; // 1% lang sa kaliwa at kanan
+        const paddingX = config.width * 0.01; 
         const paddingY = config.height * 0.015;
         const gap = config.height * 0.01;
 
         if (config.shots === 4) {
-            // 2x6 Strip: 4 photos, bawat isa ay 2 wide x 1.5 long
             const w = config.width - (paddingX * 2);
             const h = (config.height * 0.92 - (paddingY * 2) - (gap * 3)) / 4;
             for (let i = 0; i < 4; i++) {
                 slots.push({ x: paddingX, y: paddingY + (i * (h + gap)), w, h });
             }
         } else if (config.shots === 2) {
-            // 4x6: 2 photos, bawat isa ay 4 wide x 3 long
             const w = config.width - (paddingX * 2);
             const h = (config.height * 0.92 - (paddingY * 2) - gap) / 2;
             for (let i = 0; i < 2; i++) {
                 slots.push({ x: paddingX, y: paddingY + (i * (h + gap)), w, h });
             }
         } else {
-            // 5x7: 1 large photo, 5 wide x ~6.3 long
             const photoAreaHeight = config.height * 0.92;
             slots.push({ 
                 x: paddingX, 
@@ -77,15 +72,12 @@ class CanvasRenderer {
                 const slotRatio = slot.w / slot.h;
                 let drawW, drawH, drawX, drawY;
                 
-                // "Cover" logic: Picture fills the entire slot width
                 if (imgRatio > slotRatio) {
-                    // Image is wider - fill width, crop top/bottom
                     drawW = slot.w;
                     drawH = drawW / imgRatio;
                     drawX = slot.x;
                     drawY = slot.y + (slot.h - drawH) / 2;
                 } else {
-                    // Image is taller - fill height, crop left/right
                     drawH = slot.h;
                     drawW = drawH * imgRatio;
                     drawX = slot.x + (slot.w - drawW) / 2;

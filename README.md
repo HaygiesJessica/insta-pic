@@ -4,7 +4,11 @@ Insta-Pic is a web-based photobooth application designed to look and feel like a
 
 ## Features
 
+<<<<<<< HEAD
 - **Realistic Machine Interface:** The application features a cute, mint-green kiosk design complete with a working camera lens, flash, and a photo slot where finished images drop out.
+=======
+- **Realistic Machine Interface:** The application features a cute and mint-green kiosk design.
+>>>>>>> e922060 (Conciseness)
 - **Classic Frame Layouts:** Users can choose between three standard print sizes: 4-photo strip, 2-photo wide, or single large photo.
 - **High-Resolution Output:** All downloads are rendered at 300 DPI, matching exact real-world print dimensions for professional quality.
 - **Customization Tools:** Users can change frame colors, apply photo filters (Normal, Black & White, Sepia, Vivid), and add custom text.
