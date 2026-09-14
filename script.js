@@ -1,5 +1,4 @@
 const LAYOUT_CONFIG = {
-    // LAHAT NG FRAMES AY PORTRAIT (PATAYO)
     strip2x6: { width: 600, height: 1800, shots: 4 },
     landscape4x6: { width: 1200, height: 1800, shots: 2 },
     single5x7: { width: 1500, height: 2100, shots: 1 }
@@ -32,27 +31,23 @@ class CanvasRenderer {
         const config = this.layout;
         const slots = [];
         
-        // Manipis na borders (1.5% sa gilid)
         const paddingX = config.width * 0.015;
         const paddingY = config.height * 0.015;
         const gap = config.height * 0.015;
 
         if (config.shots === 4) {
-            // 2x6 Strip: 4 portrait photos stacked vertically
             const w = config.width - (paddingX * 2);
             const h = (config.height * 0.90 - (paddingY * 2) - (gap * 3)) / 4;
             for (let i = 0; i < 4; i++) {
                 slots.push({ x: paddingX, y: paddingY + (i * (h + gap)), w, h });
             }
         } else if (config.shots === 2) {
-            // 4x6: 2 portrait photos stacked vertically
             const w = config.width - (paddingX * 2);
             const h = (config.height * 0.90 - (paddingY * 2) - gap) / 2;
             for (let i = 0; i < 2; i++) {
                 slots.push({ x: paddingX, y: paddingY + (i * (h + gap)), w, h });
             }
         } else {
-            // 5x7: 1 large portrait photo
             const photoAreaHeight = config.height * 0.90;
             slots.push({ 
                 x: paddingX, 
@@ -73,20 +68,19 @@ class CanvasRenderer {
             if (slots[index]) {
                 const slot = slots[index];
                 
-                // Walang rotation - parehong portrait ang image at slot
                 const imgRatio = img.width / img.height;
                 const slotRatio = slot.w / slot.h;
                 let drawW, drawH, drawX, drawY;
                 
-                // "Contain" logic: Fits entire image without cropping
+                // "Cover" logic: Picture fills the entire slot, may crop sa top/bottom
                 if (imgRatio > slotRatio) {
-                    // Image is wider than slot
+                    // Image is wider than slot - fill width, crop top/bottom
                     drawW = slot.w;
                     drawH = drawW / imgRatio;
                     drawX = slot.x;
                     drawY = slot.y + (slot.h - drawH) / 2;
                 } else {
-                    // Image is taller than slot
+                    // Image is taller than slot - fill height, crop left/right
                     drawH = slot.h;
                     drawW = drawH * imgRatio;
                     drawX = slot.x + (slot.w - drawW) / 2;
