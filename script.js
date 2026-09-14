@@ -39,10 +39,25 @@ class CanvasRenderer {
         const slots = this.getPhotoSlots(); ctx.save(); ctx.filter = this.filter === 'none' ? 'none' : this.filter;
         images.forEach((img, index) => {
             if (slots[index]) {
-                const slot = slots[index]; const imgRatio = img.width / img.height; const slotRatio = slot.w / slot.h;
+                const slot = slots[index];
+                const imgRatio = img.width / img.height;
+                const slotRatio = slot.w / slot.h;
                 let drawW, drawH, drawX, drawY;
-                if (imgRatio > slotRatio) { drawH = slot.h; drawW = drawH * imgRatio; drawX = slot.x - (drawW - slot.w) / 2; drawY = slot.y; }
-                else { drawW = slot.w; drawH = drawW / imgRatio; drawX = slot.x; drawY = slot.y - (drawH - slot.h) / 2; }
+                
+                // CHANGED: Use "contain" logic instead of "cover" to fit entire image without cropping
+                if (imgRatio > slotRatio) {
+                    // Image is wider than slot - fit to width
+                    drawW = slot.w;
+                    drawH = drawW / imgRatio;
+                    drawX = slot.x;
+                    drawY = slot.y + (slot.h - drawH) / 2; // Center vertically
+                } else {
+                    // Image is taller than slot - fit to height
+                    drawH = slot.h;
+                    drawW = drawH * imgRatio;
+                    drawX = slot.x + (slot.w - drawW) / 2; // Center horizontally
+                    drawY = slot.y;
+                }
                 ctx.drawImage(img, drawX, drawY, drawW, drawH);
             }
         });
@@ -333,7 +348,7 @@ class PhotoBoothApp {
     }
     handleRetake() { this.stickerMgr.clear(); this.textMgr.clear(); this.images = []; this.shots = 0; this.camera.start().then(() => { this.showScreen('camera'); this.updateStatus(); }); }
     
-        handleDownload() {
+    handleDownload() {
         try {
             this.renderer.drawBase(this.images);
             this.renderer.drawStickers(this.stickerMgr.getData());
@@ -343,7 +358,7 @@ class PhotoBoothApp {
             
             const now = new Date();
             const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0'); 
+            const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
             
