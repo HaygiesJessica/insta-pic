@@ -1,7 +1,7 @@
 const LAYOUT_CONFIG = {
-    // Changed to horizontal (landscape) orientation for multi-photo layouts
-    strip2x6: { width: 1800, height: 600, shots: 4 },   // 6x2 inches (Horizontal)
-    landscape4x6: { width: 1800, height: 1200, shots: 2 }, // 6x4 inches (Horizontal)
+    // Lahat ng frames ay VERTICAL (patayo)
+    strip2x6: { width: 600, height: 1800, shots: 4 },   // 2x6 inches (Vertical)
+    landscape4x6: { width: 1200, height: 1800, shots: 2 }, // 4x6 inches (Vertical)
     single5x7: { width: 1500, height: 2100, shots: 1 }    // 5x7 inches (Vertical)
 };
 
@@ -32,33 +32,32 @@ class CanvasRenderer {
         const config = this.layout;
         const slots = [];
         
-        // Reduced padding for all layouts to minimize excess space
-        const paddingX = config.width * 0.015; 
-        const paddingY = config.height * 0.015;
-        const gap = config.width * 0.01;
+        // Padding at gap para sa lahat ng layouts
+        const padding = config.width * 0.03;
+        const gap = config.width * 0.02;
 
         if (config.shots === 4) {
-            // Horizontal strip: 4 photos side-by-side
-            const h = config.height - (paddingY * 2);
-            const w = (config.width * 0.95 - (paddingX * 2) - (gap * 3)) / 4;
+            // 2x6 Strip: 4 pictures stacked vertically
+            const w = config.width - (padding * 2);
+            const h = (config.height * 0.90 - (padding * 2) - (gap * 3)) / 4;
             for (let i = 0; i < 4; i++) {
-                slots.push({ x: paddingX + (i * (w + gap)), y: paddingY, w, h });
+                slots.push({ x: padding, y: padding + (i * (h + gap)), w, h });
             }
         } else if (config.shots === 2) {
-            // Horizontal layout: 2 photos side-by-side
-            const h = config.height - (paddingY * 2);
-            const w = (config.width * 0.95 - (paddingX * 2) - gap) / 2;
+            // 4x6: 2 pictures stacked vertically
+            const w = config.width - (padding * 2);
+            const h = (config.height * 0.90 - (padding * 2) - gap) / 2;
             for (let i = 0; i < 2; i++) {
-                slots.push({ x: paddingX + (i * (w + gap)), y: paddingY, w, h });
+                slots.push({ x: padding, y: padding + (i * (h + gap)), w, h });
             }
         } else {
-            // Single 5x7: Reduced padding, larger photo area (93% height, leaving 7% for bottom)
-            const photoAreaHeight = config.height * 0.93;
+            // 5x7: 1 large picture
+            const photoAreaHeight = config.height * 0.90;
             slots.push({ 
-                x: paddingX, 
-                y: paddingY, 
-                w: config.width - (paddingX * 2), 
-                h: photoAreaHeight - (paddingY * 2) 
+                x: padding, 
+                y: padding, 
+                w: config.width - (padding * 2), 
+                h: photoAreaHeight - (padding * 2) 
             });
         }
         return slots;
@@ -75,7 +74,7 @@ class CanvasRenderer {
                 const slotRatio = slot.w / slot.h;
                 let drawW, drawH, drawX, drawY;
                 
-                // "Contain" logic: Fits entire image without cropping heads
+                // "Contain" logic: Fits entire image without cropping
                 if (imgRatio > slotRatio) {
                     drawW = slot.w;
                     drawH = drawW / imgRatio;
