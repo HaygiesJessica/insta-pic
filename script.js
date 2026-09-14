@@ -1,8 +1,7 @@
 const LAYOUT_CONFIG = {
-    // Lahat ng frames ay VERTICAL (patayo)
-    strip2x6: { width: 600, height: 1800, shots: 4 },   // 2x6 inches (Vertical)
-    landscape4x6: { width: 1200, height: 1800, shots: 2 }, // 4x6 inches (Vertical)
-    single5x7: { width: 1500, height: 2100, shots: 1 }    // 5x7 inches (Vertical)
+    strip2x6: { width: 600, height: 1800, shots: 4 },
+    landscape4x6: { width: 1200, height: 1800, shots: 2 },
+    single5x7: { width: 1500, height: 2100, shots: 1 }
 };
 
 const DOM_STICKER_SIZE = 30; 
@@ -32,32 +31,33 @@ class CanvasRenderer {
         const config = this.layout;
         const slots = [];
         
-        // Padding at gap para sa lahat ng layouts
-        const padding = config.width * 0.03;
-        const gap = config.width * 0.02;
+        // MAS MANIPIS NA BORDERS: Pinaliit ang padding
+        const paddingX = config.width * 0.02; // 2% lang sa gilid (dating 3%)
+        const paddingY = config.height * 0.02;
+        const gap = config.height * 0.015;
 
         if (config.shots === 4) {
             // 2x6 Strip: 4 pictures stacked vertically
-            const w = config.width - (padding * 2);
-            const h = (config.height * 0.90 - (padding * 2) - (gap * 3)) / 4;
+            const w = config.width - (paddingX * 2);
+            const h = (config.height * 0.90 - (paddingY * 2) - (gap * 3)) / 4;
             for (let i = 0; i < 4; i++) {
-                slots.push({ x: padding, y: padding + (i * (h + gap)), w, h });
+                slots.push({ x: paddingX, y: paddingY + (i * (h + gap)), w, h });
             }
         } else if (config.shots === 2) {
             // 4x6: 2 pictures stacked vertically
-            const w = config.width - (padding * 2);
-            const h = (config.height * 0.90 - (padding * 2) - gap) / 2;
+            const w = config.width - (paddingX * 2);
+            const h = (config.height * 0.90 - (paddingY * 2) - gap) / 2;
             for (let i = 0; i < 2; i++) {
-                slots.push({ x: padding, y: padding + (i * (h + gap)), w, h });
+                slots.push({ x: paddingX, y: paddingY + (i * (h + gap)), w, h });
             }
         } else {
             // 5x7: 1 large picture
             const photoAreaHeight = config.height * 0.90;
             slots.push({ 
-                x: padding, 
-                y: padding, 
-                w: config.width - (padding * 2), 
-                h: photoAreaHeight - (padding * 2) 
+                x: paddingX, 
+                y: paddingY, 
+                w: config.width - (paddingX * 2), 
+                h: photoAreaHeight - (paddingY * 2) 
             });
         }
         return slots;
@@ -67,10 +67,30 @@ class CanvasRenderer {
         const ctx = this.ctx; const config = this.layout;
         ctx.fillStyle = this.color; ctx.fillRect(0, 0, config.width, config.height);
         const slots = this.getPhotoSlots(); ctx.save(); ctx.filter = this.filter === 'none' ? 'none' : this.filter;
+        
         images.forEach((img, index) => {
             if (slots[index]) {
                 const slot = slots[index];
-                const imgRatio = img.width / img.height;
+                
+                // I-check kung ang image ay portrait (mas matangkad kaysa malapad)
+                // At ang slot ay landscape (mas malapad kaysa matangkad)
+                // Kung oo, i-rotate natin ang image para mag-fit nang tama
+                let sourceCanvas = img;
+                let needsRotation = false;
+                
+                if (img.width < img.height && slot.w > slot.h) {
+                    // Gumawa ng bagong canvas na naka-rotate ng 90 degrees
+                    sourceCanvas = document.createElement('canvas');
+                    sourceCanvas.width = img.height;
+                    sourceCanvas.height = img.width;
+                    const sCtx = sourceCanvas.getContext('2d');
+                    sCtx.translate(sourceCanvas.width / 2, sourceCanvas.height / 2);
+                    sCtx.rotate(Math.PI / 2);
+                    sCtx.drawImage(img, -img.width / 2, -img.height / 2);
+                    needsRotation = true;
+                }
+                
+                const imgRatio = sourceCanvas.width / sourceCanvas.height;
                 const slotRatio = slot.w / slot.h;
                 let drawW, drawH, drawX, drawY;
                 
@@ -86,7 +106,7 @@ class CanvasRenderer {
                     drawX = slot.x + (slot.w - drawW) / 2;
                     drawY = slot.y;
                 }
-                ctx.drawImage(img, drawX, drawY, drawW, drawH);
+                ctx.drawImage(sourceCanvas, drawX, drawY, drawW, drawH);
             }
         });
         ctx.restore();
