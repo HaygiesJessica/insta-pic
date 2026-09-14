@@ -1,7 +1,8 @@
 const LAYOUT_CONFIG = {
-    strip2x6: { width: 600, height: 1800, shots: 4 },
-    landscape4x6: { width: 1200, height: 1800, shots: 2 },
-    single5x7: { width: 1500, height: 2100, shots: 1 }
+    // Changed to horizontal (landscape) orientation for multi-photo layouts
+    strip2x6: { width: 1800, height: 600, shots: 4 },   // 6x2 inches (Horizontal)
+    landscape4x6: { width: 1800, height: 1200, shots: 2 }, // 6x4 inches (Horizontal)
+    single5x7: { width: 1500, height: 2100, shots: 1 }    // 5x7 inches (Vertical)
 };
 
 const DOM_STICKER_SIZE = 30; 
@@ -26,13 +27,43 @@ class CameraManager {
 class CanvasRenderer {
     constructor(canvasElement) { this.canvas = canvasElement; this.ctx = canvasElement.getContext('2d'); this.layout = null; this.color = '#ffffff'; this.filter = 'none'; }
     setupDimensions(layoutKey) { const config = LAYOUT_CONFIG[layoutKey]; this.layout = config; this.canvas.width = config.width; this.canvas.height = config.height; }
+    
     getPhotoSlots() {
-        const config = this.layout; const padding = config.width * 0.03; const gap = config.width * 0.02; const slots = [];
-        if (config.shots === 4) { const w = config.width - (padding * 2); const h = (config.height * 0.90 - (padding * 2) - (gap * 3)) / 4; for (let i = 0; i < 4; i++) slots.push({ x: padding, y: padding + (i * (h + gap)), w, h }); }
-        else if (config.shots === 2) { const w = config.width - (padding * 2); const h = (config.height * 0.90 - (padding * 2) - gap) / 2; for (let i = 0; i < 2; i++) slots.push({ x: padding, y: padding + (i * (h + gap)), w, h }); }
-        else { slots.push({ x: padding, y: padding, w: config.width - (padding * 2), h: config.height * 0.90 - (padding * 2) }); }
+        const config = this.layout;
+        const slots = [];
+        
+        // Reduced padding for all layouts to minimize excess space
+        const paddingX = config.width * 0.015; 
+        const paddingY = config.height * 0.015;
+        const gap = config.width * 0.01;
+
+        if (config.shots === 4) {
+            // Horizontal strip: 4 photos side-by-side
+            const h = config.height - (paddingY * 2);
+            const w = (config.width * 0.95 - (paddingX * 2) - (gap * 3)) / 4;
+            for (let i = 0; i < 4; i++) {
+                slots.push({ x: paddingX + (i * (w + gap)), y: paddingY, w, h });
+            }
+        } else if (config.shots === 2) {
+            // Horizontal layout: 2 photos side-by-side
+            const h = config.height - (paddingY * 2);
+            const w = (config.width * 0.95 - (paddingX * 2) - gap) / 2;
+            for (let i = 0; i < 2; i++) {
+                slots.push({ x: paddingX + (i * (w + gap)), y: paddingY, w, h });
+            }
+        } else {
+            // Single 5x7: Reduced padding, larger photo area (93% height, leaving 7% for bottom)
+            const photoAreaHeight = config.height * 0.93;
+            slots.push({ 
+                x: paddingX, 
+                y: paddingY, 
+                w: config.width - (paddingX * 2), 
+                h: photoAreaHeight - (paddingY * 2) 
+            });
+        }
         return slots;
     }
+
     drawBase(images) {
         const ctx = this.ctx; const config = this.layout;
         ctx.fillStyle = this.color; ctx.fillRect(0, 0, config.width, config.height);
@@ -44,18 +75,16 @@ class CanvasRenderer {
                 const slotRatio = slot.w / slot.h;
                 let drawW, drawH, drawX, drawY;
                 
-                // CHANGED: Use "contain" logic instead of "cover" to fit entire image without cropping
+                // "Contain" logic: Fits entire image without cropping heads
                 if (imgRatio > slotRatio) {
-                    // Image is wider than slot - fit to width
                     drawW = slot.w;
                     drawH = drawW / imgRatio;
                     drawX = slot.x;
-                    drawY = slot.y + (slot.h - drawH) / 2; // Center vertically
+                    drawY = slot.y + (slot.h - drawH) / 2;
                 } else {
-                    // Image is taller than slot - fit to height
                     drawH = slot.h;
                     drawW = drawH * imgRatio;
-                    drawX = slot.x + (slot.w - drawW) / 2; // Center horizontally
+                    drawX = slot.x + (slot.w - drawW) / 2;
                     drawY = slot.y;
                 }
                 ctx.drawImage(img, drawX, drawY, drawW, drawH);
@@ -63,6 +92,7 @@ class CanvasRenderer {
         });
         ctx.restore();
     }
+
     drawStickers(stickersData) {
         const ctx = this.ctx;
         const ratio = this.canvas.width / this.canvas.getBoundingClientRect().width;
@@ -80,6 +110,7 @@ class CanvasRenderer {
             ctx.restore();
         });
     }
+
     drawTexts(textsData) {
         const ctx = this.ctx;
         const ratio = this.canvas.width / this.canvas.getBoundingClientRect().width;
@@ -98,6 +129,7 @@ class CanvasRenderer {
             ctx.restore();
         });
     }
+
     toDataURL() { return this.canvas.toDataURL('image/png'); }
 }
 
@@ -135,7 +167,7 @@ class InteractiveElementManager {
         
         const delBtn = this.createHandle('delete-handle', '×');
         const rotBtn = this.createHandle('rotate-handle', '↻');
-        const resBtn = this.createHandle('resize-handle', '⤡');
+        const resBtn = this.createHandle('resize-handle', '');
 
         delBtn.onclick = (e) => { e.stopPropagation(); this.deleteItem(el); };
         
